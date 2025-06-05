@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xadrez 2 - Seu Próximo Desafio!</title>
+    <!-- Inclui o Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define a fonte Inter para todo o corpo */
+        html {
+            /* Permite rolagem vertical no html */
+            overflow-y: auto;
+            /* Esconde rolagem horizontal se não for necessária */
+            overflow-x: hidden;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1a2f; /* Um azul marinho bem escuro para o fundo */
+            color: #e2e8f0; /* Cor do texto claro */
+            overflow: hidden; /* Inicialmente esconde a rolagem do body */
+            /* Custom Cursor - Tentando um tamanho mais compatível (32x32) */
+            cursor: url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgPyTXU1loyJBrTn49BHbNGBviJ0S13fBkklePNyQGG0SaLYjCNMYnvyYuMih3v4BvnewDoJnBddfDwTF_ZDBh5QNQXunuQvzZg9DhXrQM_FBIwmESl_pTljnrtjtGoDH2vOPx39yFJsVh1DCIiJRKFRyMagV6mcYB4M7D3bDavOxH8vgB3LMWYnO-rttRJ/s32/WKnight.png'), auto; 
+        }
+
+        /* Estilos para a tela de splash */
+        #splashScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            /* Fundo estilo céu: Gradiente de azul claro para azul médio */
+            background: linear-gradient(180deg, #87CEEB 0%, #ADD8E6 50%, #6A5ACD 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Garante que fique acima de tudo */
+            opacity: 1;
+            /* Transição suave para o fade-out e escala, simulando a "fumaça" */
+            transition: opacity 2s ease-out, transform 2s ease-out;
+        }
+
+        #splashScreen img {
+            max-width: 90%; /* Ajuste para responsividade */
+            max-height: 50%; /* Ajuste para não ser muito grande em telas pequenas */
+            opacity: 0; /* Inicia invisível */
+            transform: translateY(20px); /* Inicia ligeiramente abaixo */
+            /* Animação de entrada da logo: Fading e subindo suavemente */
+            animation: fadeInLogo 1.5s ease-out 0.5s forwards;
+        }
+
+        @keyframes fadeInLogo {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Classe para a animação de saída da tela de splash (fumaça/desaparecimento) */
+        .splash-fade-out {
+            opacity: 0 !important;
+            transform: scale(1.1); /* Efeito de expansão para "fumaça" */
+        }
+
+        /* Conteúdo principal inicialmente escondido e com transição suave */
+        #mainContent {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1.5s ease-in, visibility 1.5s ease-in; /* Transição suave para a aparição do conteúdo */
+        }
+        .main-content-visible {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        /* Estilos para o carrossel */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px; /* Limita a largura máxima para imagens */
+            margin: auto;
+            overflow: hidden;
+            border-radius: 1rem; /* rounded-xl do Tailwind */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4); /* shadow-2xl do Tailwind */
+        }
+        .carousel-slides {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+        .carousel-slide {
+            min-width: 100%;
+            flex-shrink: 0;
+        }
+        .carousel-slide img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 1rem; /* rounded-xl do Tailwind */
+        }
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-radius: 9999px; /* rounded-full do Tailwind */
+            font-size: 1.5rem;
+            transition: background-color 0.3s ease;
+            z-index: 10; /* Garante que os botões fiquem acima das imagens */
+        }
+        .carousel-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        .carousel-button-prev {
+            left: 1rem;
+        }
+        .carousel-button-next {
+            right: 1rem;
+        }
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+        .carousel-dot {
+            height: 0.75rem;
+            width: 0.75rem;
+            margin: 0 0.5rem;
+            background-color: #4a5568; /* gray-700 */
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .carousel-dot.active {
+            background-color: #fbd38d; /* yellow-300 para destaque */
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <!-- Tela de Splash que aparece ao carregar a página -->
+    <div id="splashScreen">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiokAPr6BgNfzcl8KWwoXINlhtyZ8RT1551QvSGtyALHDo_xvr7OYTUS5kG0JHtGAnVx-FYm7D2dOD2par0NSGlBxGkNtirRUQoGfdMkOoWH875dbwju75-s0rzY32nCaP2TV2RhmRZfUXwQvWtldQgcOeXI6rNSJW97R70FnguXvy2HtYdItcapH2h9Jsu/s320/IMG_20250522_081121.png"
+             alt="Logo Xadrez 2 Atualizado"
+             class="h-40 sm:h-48 md:h-64 object-contain"> <!-- Aumentei o tamanho da logo na tela de splash -->
+    </div>
+
+    <!-- Conteúdo Principal do Site (Inicialmente escondido) -->
+    <div id="mainContent">
+        <div class="min-h-screen flex flex-col items-center p-4">
+
+            <!-- Cabeçalho -->
+            <header class="w-full max-w-4xl flex justify-between items-center py-6">
+                <!-- Imagem da logo substituindo o texto "Xadrez 2" -->
+                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiokAPr6BgNfzcl8KWwoXINlhtyZ8RT1551QvSGtyALHDo_xvr7OYTUS5kG0JHtGAnVx-FYm7D2dOD2par0NSGlBxGkNtirRUQoGfdMkOoWH875dbwju75-s0rzY32nCaP2TV2RhmRZfUXwQvWtldQgcOeXI6rNSJW97R70FnguXvy2HtYdItcapH2h9Jsu/s320/IMG_20250522_081121.png"
+                     alt="Logo Xadrez 2 Atualizado"
+                     class="h-20 sm:h-24 md:h-28 object-contain"> <!-- Ajusta a altura da imagem para ser responsiva e manter a proporção -->
+                <nav>
+                    <ul class="flex space-x-6">
+                        <li><a href="#" class="text-lg font-medium hover:text-yellow-400 transition duration-300">Início</a></li>
+                        <li><a href="#" class="text-lg font-medium hover:text-yellow-400 transition duration-300">Recursos</a></li>
+                        <li><a href="#" class="text-lg font-medium hover:text-yellow-400 transition duration-300">Sobre</a></li>
+                    </ul>
+                </nav>
+            </header>
+
+            <!-- Seção Principal (Hero Section) -->
+            <main class="flex-grow flex flex-col items-center justify-center text-center w-full max-w-4xl py-12">
+                <h2 class="text-5xl md:text-6xl font-extrabold text-white leading-tight mb-6">
+                    Domine o Tabuleiro no <span class="text-yellow-400">Xadrez 2</span>
+                </h2>
+                <p class="text-xl md:text-2xl text-blue-200 mb-10 max-w-2xl">
+                    A evolução do clássico. Gráficos impressionantes, modos de jogo inovadores e desafios online. Sua estratégia nunca foi tão testada!
+                </p>
+                <a href="#download-section" class="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-4 px-10 rounded-full shadow-lg transform transition duration-300 hover:scale-105 text-2xl">
+                    Baixar Agora!
+                </a>
+            </main>
+
+            <!-- Seção de Recursos -->
+            <section class="w-full max-w-4xl py-16 bg-blue-900 rounded-xl shadow-2xl mb-12">
+                <h3 class="text-4xl font-bold text-center text-white mb-12">Recursos Incríveis</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-8">
+                    <!-- Recurso 1 -->
+                    <div class="flex flex-col items-center text-center p-6 bg-blue-800 rounded-lg shadow-md hover:shadow-xl transform transition duration-300 hover:-translate-y-1">
+                        <svg class="w-16 h-16 text-yellow-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9.75 17c-1.3 0-2.35-1.05-2.35-2.35S8.45 12.3 9.75 12.3c1.3 0 2.35 1.05 2.35 2.35S11.05 17 9.75 17zM15 17c-1.3 0-2.35-1.05-2.35-2.35S13.7 12.3 15 12.3c1.3 0 2.35 1.05 2.35 2.35S16.3 17 15 17zM12 21c-2.76 0-5-2.24-5-5V7c0-2.76 2.24-5 5-5s5 2.24 5 5v9c0 2.76-2.24 5-5 5zm0-2c1.66 0 3-1.34 3-3V7c0-1.66-1.34-3-3-3S9 5.34 9 7v9c0 1.66 1.34 3 3 3zM12 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM12 9c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM12 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>
+                        <h4 class="text-2xl font-semibold text-white mb-3">Gráficos Aprimorados</h4>
+                        <p class="text-blue-200">Visuais deslumbrantes que dão vida ao tabuleiro como nunca antes.</p>
+                    </div>
+                    <!-- Recurso 2 -->
+                    <div class="flex flex-col items-center text-center p-6 bg-blue-800 rounded-lg shadow-md hover:shadow-xl transform transition duration-300 hover:-translate-y-1">
+                        <svg class="w-16 h-16 text-yellow-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <h4 class="text-2xl font-semibold text-white mb-3">Novos Modos de Jogo</h4>
+                        <p class="text-blue-200">Desafios únicos e variantes para manter o jogo sempre fresco e emocionante.</p>
+                    </div>
+                    <!-- Recurso 3 -->
+                    <div class="flex flex-col items-center text-center p-6 bg-blue-800 rounded-lg shadow-md hover:shadow-xl transform transition duration-300 hover:-translate-y-1">
+                        <svg class="w-16 h-16 text-yellow-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21c-4.97 0-9-4.03-9-9s4.03-9 9-9 9 4.03 9 9-4.03 9-9 9zM12 3a9 9 0 00-9 9m9 9a9 9 000-9 9m-9 9a9 9 000-9 9M9 12c0-1.66 1.34-3 3-3s3 1.34 3 3-1.34 3-3 3-3-1.34-3-3z"></path></svg>
+                        <h4 class="text-2xl font-semibold text-white mb-3">Multiplayer Online</h4>
+                        <p class="text-blue-200">Disponível em breve!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção de Carrossel de Imagens do Jogo -->
+            <section class="w-full max-w-4xl py-16 bg-blue-900 rounded-xl shadow-2xl mb-12">
+                <h3 class="text-4xl font-bold text-center text-white mb-8">Capturas de Tela do Jogo</h3>
+                <div class="carousel-container">
+                    <div class="carousel-slides" id="carouselSlides">
+                        <div class="carousel-slide">
+                            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjJdM_9gersUn_mpD-j2Xw03AQFPeMz0_3ZX0Fs8Dum6j073NAE95vX-888n9oE4LYMJoMsyHu4R7ASBprJ2c0tLw0aRmaE4A8ddRjxM5RT7zj6gRwpjQnBZXLXRK8Qn5KS2llnhN1g5KCPfA5FoT6hZ2wfXNQmT0vWz2DaP5Ak3moyh8UtM922z9FcIROH/s320/Captura%20de%20tela%202025-06-03%20103045.png" alt="Captura de Tela do Jogo 1">
+                        </div>
+                        <div class="carousel-slide">
+                            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiPQQ-Ordp6IXCEr3mhQDK1CxL6aH_52YlZ4mORBZ11O0aIZpdADO1hqJVbiqpNLIeslzZngXdRweB1jJj1i2ufLupkdx3tYycjvSo4tBMxAHwqvibH5LqbO75cxYBdhyphenhyphen4fslYGfEH8jmD4yf0TjPlmCBZbvBqidlvTUOu3CnFRhliVST2v8poMWO3oTb56/s320/Captura%20de%20tela%202025-06-03%20103016.png" alt="Captura de Tela do Jogo 2">
+                        </div>
+                        <div class="carousel-slide">
+                            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjRPIhdyTk4Vpb4bgkTT1V680xXXJtLHQC3-XXeoTUUceXEnKFPoX7V8NsT9wya2NLDg9KP08tUbxm-PTxipb7ACLzTEwVNFqwIQPzOHQPwbfsqJxMl3KsZaeSoCFhSOOYU9PuMMMLbq3lRcuCWQKF-qwz25zNg0DLL4sosmeIHQi6stPc0qO9xialKqbiv/s320/Captura%20de%20tela%20222.png" alt="Captura de Tela do Jogo 3">
+                        </div>
+                    </div>
+                    <button class="carousel-button carousel-button-prev" id="carouselPrev">&#10094;</button>
+                    <button class="carousel-button carousel-button-next" id="carouselNext">&#10095;</button>
+                </div>
+                <div class="carousel-dots" id="carouselDots">
+                    <span class="carousel-dot active"></span>
+                    <span class="carousel-dot"></span>
+                    <span class="carousel-dot"></span>
+                </div>
+            </section>
+
+            <!-- Seção de Dicas de Xadrez com Gemini API -->
+            <section class="w-full max-w-4xl py-16 bg-blue-900 rounded-xl shadow-2xl mb-12">
+                <h3 class="text-4xl font-bold text-center text-white mb-8">Obtenha Dicas de Xadrez com IA ✨</h3>
+                <div class="px-8 flex flex-col items-center">
+                    <p class="text-lg text-blue-200 mb-6 text-center">Descreva sua situação no xadrez ou sua dúvida para obter uma análise e uma dica da IA.</p>
+                    <textarea id="chessTipPrompt" class="w-full md:w-3/4 p-4 rounded-lg bg-blue-800 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 mb-6" rows="4" placeholder="Ex: 'Como devo iniciar um jogo?', 'Minha rainha está sob ataque, o que fazer?'"></textarea>
+                    <button id="generateTipButton" class="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-full shadow-lg transform transition duration-300 hover:scale-105 text-lg mb-6">
+                        Gerar Dica ✨
+                    </button>
+                    <div id="loadingIndicator" class="hidden text-yellow-400 text-lg font-semibold flex items-center justify-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Gerando dica...
+                    </div>
+                    <div id="chessTipResponse" class="w-full md:w-3/4 p-6 bg-blue-800 rounded-lg text-left mt-4 hidden">
+                        <!-- Resposta da IA será injetada aqui -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção de Download (âncora para o botão "Baixar Agora") -->
+            <section id="download-section" class="w-full max-w-4xl py-16 bg-blue-950 rounded-xl shadow-2xl">
+                <h3 class="text-4xl font-bold text-center text-white mb-12">Pronto para Jogar?</h3>
+                <div class="flex flex-col md:flex-row justify-around items-center gap-8 px-8">
+                    <!-- Opção de Download para Windows -->
+                    <div class="flex flex-col items-center p-8 bg-blue-900 rounded-lg shadow-md w-full md:w-1/3">
+                        <img src="https://img.icons8.com/ios-glyphs/90/windows-10.png" alt="Logo Windows" class="w-24 h-24 mb-6 rounded-md">
+                        <h4 class="text-3xl font-semibold text-white mb-4">Windows</h4>
+                        <p class="text-blue-200 mb-6">Versão estável para PC</p>
+                        <a href="https://github.com/Megadroidgames/XADREZ2/releases/download/untagged-db81de873f097b1d985a/XADREZ2.zip" class="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-full shadow-lg transform transition duration-300 hover:scale-105 text-lg">
+                            <span class="mr-2">⬇️</span> Download (.zip)
+                        </a>
+                    </div>
+                    <!-- Opção de Download para macOS (Placeholder) -->
+                    <div class="flex flex-col items-center p-8 bg-blue-900 rounded-lg shadow-md w-full md:w-1/3">
+                        <img src="https://img.icons8.com/ios-glyphs/90/mac-logo.png" alt="Logo macOS" class="w-24 h-24 mb-6 rounded-md">
+                        <h4 class="text-3xl font-semibold text-white mb-4">macOS</h4>
+                        <p class="text-blue-200 mb-6">Em breve!</p>
+                        <button disabled class="bg-gray-500 text-white font-bold py-3 px-8 rounded-full shadow-md cursor-not-allowed text-lg opacity-70">
+                            <span class="mr-2">⏳</span> Indisponível
+                        </button>
+                    </div>
+                    <!-- Opção de Download para Linux (Placeholder) -->
+                    <div class="flex flex-col items-center p-8 bg-blue-900 rounded-lg shadow-md w-full md:w-1/3">
+                        <img src="https://img.icons8.com/ios-filled/90/linux.png" alt="Logo Linux" class="w-24 h-24 mb-6 rounded-md">
+                        <h4 class="text-3xl font-semibold text-white mb-4">Linux</h4>
+                        <p class="text-blue-200 mb-6">Em breve!</p>
+                        <button disabled class="bg-gray-500 text-white font-bold py-3 px-8 rounded-full shadow-md cursor-not-allowed text-lg opacity-70">
+                            <span class="mr-2">⏳</span> Indisponível
+                        </button>
+                    </div>
+                </div>
+                <p class="text-center text-blue-300 mt-10 text-sm">
+                    *Requisitos mínimos do sistema: Processador dual-core, 2GB RAM, 100MB de espaço em disco.
+                </p>
+            </section>
+
+            <!-- Rodapé -->
+            <footer class="w-full max-w-4xl text-center py-8 text-blue-400 text-sm">
+                &copy; 2025 João Lucas. Todos os direitos reservados.
+                <div class="mt-4 flex justify-center space-x-4">
+                    <!-- Link para Instagram -->
+                    <a href="https://www.instagram.com/jaoo_lucasss?igsh=MXVmbnJzemdyZWJuaw==" target="_blank" rel="noopener noreferrer" class="hover:text-yellow-400 transition duration-300">Instagram</a>
+                    <!-- Link para X (Twitter) -->
+                    <a href="https://x.com/jaoo_lucasss?t=ohcD_K_wNu_YUlTr16DqzQ&s=09" target="_blank" rel="noopener noreferrer" class="hover:text-yellow-400 transition duration-300">X (Twitter)</a>
+                </div>
+            </footer>
+
+            <!-- Message Box -->
+            <div id="messageBox" class="fixed bottom-4 right-4 p-4 rounded-lg shadow-lg z-50 transition-transform transform translate-y-full">
+                <span id="messageText" class="text-white"></span>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase imports and initialization (mandatory boilerplate)
+        // Even if Firestore is not used for this specific feature,
+        // the Firebase auth initialization is included as per instructions.
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // getFirestore and other Firestore modules are not imported as they are not used.
+
+        let app;
+        let auth;
+        let db; // Placeholder for db, not actually used in this version for Firestore operations
+
+        // Function to show custom messages (replaces alert/confirm)
+        function showMessage(message, type = 'info') {
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            messageText.textContent = message;
+            messageBox.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg z-50 transition-transform transform ${type === 'error' ? 'bg-red-600' : 'bg-blue-600'} text-white`;
+            messageBox.classList.remove('translate-y-full');
+            messageBox.classList.add('translate-y-0');
+
+            setTimeout(() => {
+                messageBox.classList.remove('translate-y-0');
+                messageBox.classList.add('translate-y-full');
+            }, 5000); // Hide after 5 seconds
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Firebase Initialization
+            try {
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+
+                if (Object.keys(firebaseConfig).length > 0) {
+                    app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                        console.log('Firebase signed in with custom token.');
+                    } else {
+                        await signInAnonymously(auth);
+                        console.log('Firebase signed in anonymously.');
+                    }
+                } else {
+                    console.warn('Firebase config not found or is empty. Firebase features may not work.');
+                }
+            } catch (error) {
+                console.error('Firebase initialization error:', error);
+            }
+
+            // Splash Screen Logic
+            const splashScreen = document.getElementById('splashScreen');
+            const mainContent = document.getElementById('mainContent');
+
+            // Timeout para o fade-out da tela de splash e fade-in do conteúdo principal
+            // Espera 3 segundos (1.5s para a logo aparecer + 1.5s de exibição) antes de começar a transição.
+            setTimeout(() => {
+                splashScreen.classList.add('splash-fade-out'); // Ativa a classe de fade-out e escala
+                // Ouve o fim da transição da tela de splash
+                splashScreen.addEventListener('transitionend', () => {
+                    splashScreen.style.display = 'none'; // Esconde completamente após a animação
+                    mainContent.classList.add('main-content-visible'); // Torna o conteúdo principal visível
+                    document.body.style.overflow = 'auto'; // Reabilita o scroll do body
+
+                    // Inicia o carrossel somente após o conteúdo principal estar visível
+                    window.initializeCarousel();
+                }, { once: true }); // Garante que o listener seja removido após o primeiro uso
+            }, 3000); // 3 segundos de delay total (tempo de exibição da splash screen)
+
+
+            // Gemini API Integration Logic
+            const promptInput = document.getElementById('chessTipPrompt');
+            const responseDiv = document.getElementById('chessTipResponse');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const generateButton = document.getElementById('generateTipButton');
+
+            generateButton.addEventListener('click', async () => {
+                const prompt = promptInput.value.trim();
+
+                if (!prompt) {
+                    showMessage('Por favor, digite sua dúvida de xadrez.', 'error');
+                    return;
+                }
+
+                loadingIndicator.classList.remove('hidden');
+                responseDiv.classList.add('hidden'); // Hide response div while loading
+                responseDiv.innerHTML = ''; // Clear previous response
+                generateButton.disabled = true;
+
+                try {
+                    let chatHistory = [];
+                    // Crafting a concise prompt for the LLM
+                    chatHistory.push({ role: "user", parts: [{ text: `Gere uma dica de xadrez ou análise de cenário com base na seguinte descrição: "${prompt}". Seja conciso e direto, focando na estratégia e próximos passos.` }] });
+
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; // Canvas will automatically provide the API key
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        responseDiv.innerHTML = `<p class="text-gray-200 whitespace-pre-wrap">${text}</p>`;
+                        responseDiv.classList.remove('hidden'); // Show response div
+                    } else {
+                        showMessage('Não foi possível gerar uma dica. Tente novamente com uma descrição diferente.', 'error');
+                        responseDiv.innerHTML = '<p class="text-red-400">Erro ao gerar dica. Verifique a descrição ou tente mais tarde.</p>';
+                        responseDiv.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Erro ao chamar a API Gemini:', error);
+                    showMessage('Erro de rede ou servidor ao tentar obter a dica. Por favor, tente novamente.', 'error');
+                    responseDiv.innerHTML = '<p class="text-red-400">Ocorreu um erro inesperado ao processar sua solicitação.</p>';
+                    responseDiv.classList.remove('hidden');
+                    console.log('API response was:', result); // Log the full API response for debugging
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                    generateButton.disabled = false;
+                }
+            });
+
+            // Carousel Logic
+            const carouselSlides = document.getElementById('carouselSlides');
+            const carouselPrev = document.getElementById('carouselPrev');
+            const carouselNext = document.getElementById('carouselNext');
+            const carouselDotsContainer = document.getElementById('carouselDots');
+            const slides = document.querySelectorAll('.carousel-slide');
+            const totalSlides = slides.length;
+            let currentSlide = 0;
+            let autoSlideInterval;
+
+            // Function to update carousel display
+            function updateCarousel() {
+                carouselSlides.style.transform = `translateX(-${currentSlide * 100}%)`;
+                // Update dots
+                document.querySelectorAll('.carousel-dot').forEach((dot, index) => {
+                    if (index === currentSlide) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                });
+            }
+
+            // Next slide
+            carouselNext.addEventListener('click', () => {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                updateCarousel();
+                resetAutoSlide();
+            });
+
+            // Previous slide
+            carouselPrev.addEventListener('click', () => {
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                updateCarousel();
+                resetAutoSlide();
+            });
+
+            // Dot navigation
+            carouselDotsContainer.innerHTML = ''; // Clear existing dots
+            slides.forEach((_, index) => {
+                const dot = document.createElement('span');
+                dot.classList.add('carousel-dot');
+                if (index === 0) dot.classList.add('active');
+                dot.addEventListener('click', () => {
+                    currentSlide = index;
+                    updateCarousel();
+                    resetAutoSlide();
+                });
+                carouselDotsContainer.appendChild(dot);
+            });
+
+            // Automatic slide
+            function startAutoSlide() {
+                autoSlideInterval = setInterval(() => {
+                    currentSlide = (currentSlide + 1) % totalSlides;
+                    updateCarousel();
+                }, 5000); // Change slide every 5 seconds
+            }
+
+            function resetAutoSlide() {
+                clearInterval(autoSlideInterval);
+                startAutoSlide();
+            }
+        });
+    </script>
+</body>
+</html>
