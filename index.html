@@ -200,8 +200,8 @@
                 contents: chatHistory
             };
 
-            // A API Key deve ser uma string vazia para ser injetada automaticamente pelo ambiente.
-            const apiKey = ""; 
+            // A API Key foi inserida diretamente no código para resolver o erro 403.
+            const apiKey = "AIzaSyDZj62ymhVHBBL1zcNvsK_X9LbxHw5p6mw"; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             console.log("Enviando solicitação para a API Gemini...");
