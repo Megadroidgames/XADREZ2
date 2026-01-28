@@ -1,418 +1,422 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sigilo - Seu Assistente Virtual de Denúncias</title>
-    <!-- Inclui o Tailwind CSS via CDN para estilização rápida e responsiva -->
+    <title>Plataforma de Estudos FATEC - ADS</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Define a fonte Inter como padrão para uma melhor legibilidade -->
+    <!-- React & ReactDOM CDN (para rodar no navegador sem build) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel para transpilar JSX no navegador -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* Cor de fundo suave */
-        }
-        /* Estilos para o modal de intenção de saída */
-        .modal {
-            display: none; /* Escondido por padrão */
-            position: fixed;
-            z-index: 1000; /* Garante que fique acima de outros elementos */
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4); /* Fundo escurecido */
-            backdrop-filter: blur(5px); /* Efeito de desfoque no fundo */
-            -webkit-backdrop-filter: blur(5px); /* Compatibilidade com Safari */
-        }
-        .modal-content {
-            background-color: #ffffff;
-            margin: 15% auto; /* Centraliza verticalmente e horizontalmente */
-            padding: 2.5rem; /* Aumenta o padding */
-            border-radius: 1.5rem; /* Cantos mais arredondados */
-            box-shadow: 0 10px 20px rgba(0,0,0,0.15); /* Sombra mais pronunciada */
-            width: 90%; /* Ajuste para responsividade */
-            max-width: 600px; /* Largura máxima */
-            text-align: center;
-            animation: fadeInScale 0.3s ease-out; /* Animação de entrada */
-        }
-        @keyframes fadeInScale {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 2rem; /* Tamanho maior para o botão de fechar */
-            font-weight: bold;
-        }
-        .close-button:hover,
-        .close-button:focus {
-            color: #718096; /* Cor no hover */
-            text-decoration: none;
-            cursor: pointer;
-        }
-        /* Estilo para o indicador de carregamento */
-        .loading-indicator {
-            display: none; /* Escondido por padrão */
-            margin-top: 1rem;
-            color: #4a5568;
-            font-size: 0.9rem;
-        }
-        /* Oculta a barra de rolagem para rolagem horizontal mais limpa */
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        /* Removida a classe customizada, agora usamos classes Tailwind como mb-3 */
+      /* Estilos básicos para o 'prose' do summary */
+      .prose h3 {
+        font-size: 1.5rem; /* text-2xl */
+        font-weight: 600; /* font-semibold */
+        margin-bottom: 1rem; /* mb-4 */
+        border-bottom: 2px solid theme('colors.gray.300'); /* border-b-2 border-gray-300 */
+        padding-bottom: 0.5rem; /* pb-2 */
+      }
+      .prose strong {
+        font-weight: 700; /* font-bold */
+      }
     </style>
-    <!-- Adiciona o link para o manifesto do PWA -->
-    <link rel="manifest" href="/manifest.json">
-    <!-- Configurações para o modo standalone do PWA -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
 </head>
-<body class="flex flex-col min-h-screen">
-    <!-- Conteúdo principal que irá rolar e se ajustar ao espaço -->
-    <div class="flex-grow flex flex-col items-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl shadow-xl p-8 md:p-10 lg:p-12 max-w-2xl w-full text-center transform transition duration-500 hover:scale-[1.01] hover:shadow-2xl mb-20">
-            <!-- Espaço para o Avatar -->
-            <div id="avatar-placeholder" class="w-32 h-32 md:w-40 md:h-40 bg-transparent rounded-full mx-auto mb-6 flex items-center justify-center text-white text-3xl font-bold border-4 border-white shadow-lg overflow-hidden">
-                <!-- IMAGEM DO SEU AVATAR AQUI - AGORA USANDO A URL FORNECIDA -->
-                <img src="https://i.ibb.co/8DRFqngQ/imagem-2025-06-15-205757350.png" alt="Avatar Sigilo" class="w-full h-full object-cover rounded-full" onerror="this.onerror=null; this.src='https://placehold.co/100x100/eeeeee/aaaaaa?text=Erro'">
-            </div>
+<body class="min-h-screen bg-gray-100 font-sans text-gray-800 flex flex-col">
+    <div id="root"></div>
 
-            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-4">Olá, eu sou o <span class="text-indigo-600">Sigilo</span>!</h1>
-            <p class="text-base md:text-lg text-gray-600 mb-8">Estou aqui para te auxiliar a navegar pelos canais de denúncia do Estado de São Paulo.</p>
+    <script type="text/babel">
+        // Componente principal do aplicativo
+        function App() {
+            // Dados das matérias a serem exibidas na navegação
+            const subjectsMetaData = [
+                { name: "Administração Geral", id: "adm-geral" },
+                { name: "Algoritmos", id: "algoritmos" },
+                { name: "Matemática Discreta", id: "mat-discreta" },
+                { name: "Laboratório de Hardware", id: "lab-hardware" },
+                { name: "Arquitetura e Organização Computacional", id: "arq-comp" },
+            ];
 
-            <!-- Área de Chat/Histórico de Mensagens -->
-            <div id="chat-messages" class="text-left bg-gray-50 p-4 rounded-xl mb-6 max-h-60 overflow-y-auto border border-gray-200">
-                <!-- Mensagem inicial com espaçamento mb-3 e overflow-hidden -->
-                <div class="mb-3 overflow-hidden">
-                    <p class="bg-indigo-100 text-indigo-800 p-3 rounded-lg inline-block max-w-[80%]">Olá! Em que posso te ajudar hoje?</p>
-                </div>
-            </div>
+            // Estados do aplicativo
+            const [selectedSubject, setSelectedSubject] = React.useState(null); // Matéria selecionada
+            const [currentSubjectContent, setCurrentSubjectContent] = React.useState(null); // Conteúdo da matéria (resumo, perguntas)
+            const [userAnswers, setUserAnswers] = React.useState({}); // Respostas do usuário para cada pergunta
+            const [geminiFeedback, setGeminiFeedback] = React.useState({}); // Feedback da IA para cada pergunta
+            const [loadingContent, setLoadingContent] = React.useState(false); // Indica se o conteúdo da matéria está sendo carregado
+            const [loadingFeedback, setLoadingFeedback] = React.useState({}); // Indica se o feedback de uma pergunta específica está sendo carregado
 
-            <!-- Indicador de Carregamento -->
-            <div id="loading-indicator" class="loading-indicator">
-                Sigilo está pensando...
-            </div>
+            // Chave da API da Gemini - Substitua pela sua chave real
+            const API_KEY = "AIzaSyDXK-3nAi7TKlf8nD8V4D0shvPDLYdwRp4";
 
-            <!-- Sugestões de Perguntas (com rolagem horizontal e botões) -->
-            <div class="w-full relative px-4 md:px-0 mb-6">
-                <h2 class="text-xl md:text-2xl font-bold text-gray-700 mb-4 text-left">Posso te ajudar com:</h2>
+            // Função assíncrona para gerar conteúdo da matéria usando a API da Gemini
+            const generateContentForSubject = async (subjectId, subjectName) => {
+                // Reseta estados ao carregar nova matéria
+                setCurrentSubjectContent(null);
+                setUserAnswers({});
+                setGeminiFeedback({});
+                setLoadingContent(true);
 
-                <!-- Botão de rolagem esquerda -->
-                <button id="scroll-left-btn" class="absolute left-0 top-1/2 -translate-y-1/2 bg-indigo-600 text-white p-2 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 z-10 hidden md:block">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                </button>
+                try {
+                    const prompt = `
+                        Gere um resumo detalhado sobre "${subjectName}" em nível universitário introdutório, com foco em conceitos fundamentais para o ensino médio. Use markdown para títulos (###) e negrito (**) no resumo.
+                        Em seguida, gere 4 perguntas abertas baseadas no resumo (com uma 'answer' detalhada para cada).
+                        O conteúdo do resumo deve ser diretamente relevante para as perguntas geradas, e e as perguntas devem ter um nível de dificuldade moderado.
+                        A resposta deve ser estritamente em formato JSON, seguindo esta estrutura:
+                        {
+                          "summary": "Texto do resumo detalhado com markdown para títulos (###) e negrito (**).",
+                          "questions": [
+                            {
+                              "type": "text",
+                              "question": "Texto da primeira pergunta aberta?",
+                              "answer": "Resposta ideal detalhada para a primeira pergunta."
+                            },
+                            {
+                              "type": "text",
+                              "question": "Texto da segunda pergunta aberta?",
+                              "answer": "Resposta ideal detalhada para a segunda pergunta."
+                            },
+                            {
+                              "type": "text",
+                              "question": "Texto da terceira pergunta aberta?",
+                              "answer": "Resposta ideal detalhada para a terceira pergunta."
+                            },
+                            {
+                              "type": "text",
+                              "question": "Texto da quarta pergunta aberta?",
+                              "answer": "Resposta ideal detalhada para a quarta pergunta."
+                            }
+                          ]
+                        }
+                    `;
 
-                <div id="suggestions-scroll-container" class="overflow-x-auto whitespace-nowrap py-2 scrollbar-hide">
-                    <div id="suggestions-container" class="flex gap-3">
-                        <span class="suggestion-tag bg-indigo-100 text-indigo-700 px-5 py-2 rounded-full cursor-pointer hover:bg-indigo-200 transition duration-200 shadow-sm text-sm md:text-base inline-block flex-shrink-0">Como faço uma denúncia anônima?</span>
-                        <span class="suggestion-tag bg-green-100 text-green-700 px-5 py-2 rounded-full cursor-pointer hover:bg-green-200 transition duration-200 shadow-sm text-sm md:text-base inline-block flex-shrink-0">Quais tipos de denúncias posso fazer?</span>
-                        <span class="suggestion-tag bg-purple-100 text-purple-700 px-5 py-2 rounded-full cursor-pointer hover:bg-purple-200 transition duration-200 shadow-sm text-sm md:text-base inline-block flex-shrink-0">Qual o site oficial de denúncias?</span>
-                        <span class="suggestion-tag bg-yellow-100 text-yellow-700 px-5 py-2 rounded-full cursor-pointer hover:bg-yellow-200 transition duration-200 shadow-sm text-sm md:text-base inline-block flex-shrink-0">Denunciar golpe pela internet</span>
-                        <span class="suggestion-tag bg-blue-100 text-blue-700 px-5 py-2 rounded-full cursor-pointer hover:bg-blue-200 transition duration-200 shadow-sm text-sm md:text-base inline-block flex-shrink-0">Denúncia de abuso infantil</span>
-                        <span class="suggestion-tag bg-red-100 text-red-700 px-5 py-2 rounded-full cursor-pointer hover:bg-red-200 transition duration-200 shadow-sm text-sm md:text-base inline-block flex-shrink-0">Como denunciar corrupção?</span>
-                    </div>
-                </div>
+                    const payload = {
+                        contents: [{ role: "user", parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: {
+                                    summary: { "type": "STRING" },
+                                    questions: {
+                                        type: "ARRAY",
+                                        items: {
+                                            type: "OBJECT",
+                                            properties: {
+                                                type: { "type": "STRING" },
+                                                question: { "type": "STRING" },
+                                                answer: { "type": "STRING" }
+                                            }
+                                        }
+                                    }
+                                },
+                                required: ["summary", "questions"]
+                            }
+                        }
+                    };
 
-                <!-- Botão de rolagem direita -->
-                <button id="scroll-right-btn" class="absolute right-0 top-1/2 -translate-y-1/2 bg-indigo-600 text-white p-2 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 z-10 hidden md:block">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                </button>
-            </div>
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
 
-            <p class="text-sm text-gray-500 mt-6">Para mais informações, consulte os canais oficiais do Estado de São Paulo.</p>
-        </div>
-    </div>
+                    const result = await response.json();
+                    let parsedContent;
 
-    <!-- Caixa de Texto para Perguntas (Fixa e Alinhada na parte inferior) -->
-    <div class="fixed bottom-0 left-0 right-0 z-50 bg-white p-4 shadow-lg max-w-2xl mx-auto">
-        <div class="relative w-full">
-            <textarea id="question-input" rows="2" class="w-full p-3 pr-16 border-2 border-gray-300 rounded-3xl focus:ring-4 focus:ring-indigo-300 focus:border-indigo-500 transition duration-300 resize-none text-gray-700 placeholder-gray-400" placeholder="Digite sua pergunta ou necessidade aqui..."></textarea>
-            <button id="send-button" class="absolute bottom-3 right-3 bg-indigo-600 text-white p-2.5 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition duration-300">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
-            </button>
-        </div>
-    </div>
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const jsonString = result.candidates[0].content.parts[0].text;
+                        try {
+                            // Tenta parsear diretamente
+                            parsedContent = JSON.parse(jsonString);
+                        } catch (parseError) {
+                            // Se falhar, tenta extrair de um bloco de código markdown
+                            const match = jsonString.match(/```json\n([\s\S]*?)\n```/);
+                            if (match && match[1]) {
+                                parsedContent = JSON.parse(match[1]);
+                            } else {
+                                throw new Error("Erro ao extrair JSON da resposta da IA.");
+                            }
+                        }
 
-    <!-- Modal de Intenção de Saída -->
-    <div id="exit-intent-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeModal()">&times;</span>
-            <div id="avatar-modal-placeholder" class="w-24 h-24 bg-transparent rounded-full mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg overflow-hidden">
-                <!-- IMAGEM DO SEU AVATAR AQUI PARA O MODAL - AGORA USANDO A URL FORNECIDA -->
-                <img src="https://i.ibb.co/8DRFqngQ/imagem-2025-06-15-205757350.png" alt="Avatar Sigilo" class="w-full h-full object-cover rounded-full" onerror="this.onerror=null; this.src='https://placehold.co/100x100/eeeeee/aaaaaa?text=Erro'">
-            </div>
-            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">Não vá ainda!</h2>
-            <p class="text-base md:text-lg text-gray-600 mb-6">Parece que você está saindo. Posso te ajudar a encontrar o caminho para sua denúncia?</p>
-            <a href="https://www.ssp.sp.gov.br/pagina/faleconosco.aspx" target="_blank" class="bg-red-600 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-red-700 transition duration-300 shadow-lg inline-flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 7a1 1 0 112 0v5a1 1 0 11-2 0V7zm1-4a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path></svg>
-                Ir para o site de Denúncias
-            </a>
-            <p class="text-sm text-gray-500 mt-4">Ou clique fora para continuar navegando.</p>
-        </div>
-    </div>
-
-    <!-- VLibras Widget -->
-    <div vw class="enabled">
-        <div vw-access-button class="active"></div>
-        <div vw-plugin-wrapper>
-            <div class="vw-plugin-top-wrapper"></div>
-        </div>
-    </div>
-    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
-
-    <script>
-        // Referências para elementos do DOM
-        const questionInput = document.getElementById('question-input');
-        const sendButton = document.getElementById('send-button');
-        const suggestionsContainer = document.getElementById('suggestions-container');
-        const chatMessages = document.getElementById('chat-messages');
-        const loadingIndicator = document.getElementById('loading-indicator');
-        const exitIntentModal = document.getElementById('exit-intent-modal');
-
-        // Novas referências para os botões de rolagem e o contêiner de rolagem
-        const suggestionsScrollContainer = document.getElementById('suggestions-scroll-container');
-        const scrollLeftBtn = document.getElementById('scroll-left-btn');
-        const scrollRightBtn = document.getElementById('scroll-right-btn');
-
-
-        // Histórico do chat para a API do Gemini
-        // Adicionando uma instrução de sistema para limitar o escopo das respostas
-        let chatHistory = [{
-            role: "user",
-            parts: [{ text: "Você é um assistente virtual chamado Sigilo, focado exclusivamente em auxiliar usuários com denúncias e informações relacionadas aos canais de denúncia do Estado de São Paulo. Mantenha suas respostas estritamente dentro deste tópico. Se a pergunta do usuário não estiver relacionada a denúncias ou ao Estado de São Paulo, por favor, responda educadamente que você é especializado apenas nesse tema e não pode ajudar com o assunto solicitado." }]
-        },
-        {
-            role: "model",
-            parts: [{ text: "Olá! Em que posso te ajudar hoje?" }]
-        }];
-
-        // Função para adicionar mensagem ao chat
-        function addMessage(sender, text) {
-            const messageDiv = document.createElement('div');
-            // Adiciona a classe para espaçamento (mb-3 para ~1cm) e overflow-hidden
-            messageDiv.classList.add('mb-3', 'overflow-hidden');
-
-            const messageP = document.createElement('p');
-            messageP.classList.add('p-3', 'rounded-lg', 'inline-block', 'max-w-[80%]', 'break-words'); // Adicionado break-words para quebrar texto longo
-
-            if (sender === 'user') {
-                messageP.classList.add('bg-blue-100', 'text-blue-800', 'float-right', 'clear-both');
-                messageDiv.classList.add('text-right'); // Alinha a div para a direita
-            } else {
-                messageP.classList.add('bg-indigo-100', 'text-indigo-800', 'float-left', 'clear-both');
-                messageDiv.classList.add('text-left'); // Alinha a div para a esquerda
-            }
-            messageP.textContent = text;
-            messageDiv.appendChild(messageP);
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight; // Rola para o final da conversa
-        }
-
-        // Função para enviar a pergunta ao Gemini API
-        async function sendQuestionToGemini() {
-            const userPrompt = questionInput.value.trim();
-            if (!userPrompt) {
-                console.log("A caixa de texto está vazia. Não enviando a pergunta.");
-                return; // Não envia se a caixa de texto estiver vazia
-            }
-
-            addMessage('user', userPrompt); // Adiciona a mensagem do usuário ao chat
-            questionInput.value = ''; // Limpa a caixa de texto
-            loadingIndicator.style.display = 'block'; // Mostra o indicador de carregamento
-            sendButton.disabled = true; // Desabilita o botão de envio
-            questionInput.disabled = true; // Desabilita a caixa de texto
-
-            // Adiciona a pergunta do usuário ao histórico do chat
-            chatHistory.push({ role: "user", parts: [{ text: userPrompt }] });
-
-            const payload = {
-                contents: chatHistory
+                        // Valida a estrutura
+                        if (typeof parsedContent.summary === 'string' && Array.isArray(parsedContent.questions)) {
+                            setCurrentSubjectContent(parsedContent);
+                        } else {
+                            throw new Error("Estrutura JSON inválida da resposta da IA.");
+                        }
+                    } else {
+                        throw new Error("Nenhum conteúdo gerado pela IA.");
+                    }
+                } catch (error) {
+                    console.error("Erro ao gerar conteúdo:", error);
+                    setCurrentSubjectContent({
+                        summary: `### Erro ao carregar conteúdo\nOcorreu um erro: **${error.message}**. Por favor, tente novamente.`,
+                        questions: []
+                    });
+                } finally {
+                    setLoadingContent(false);
+                }
             };
 
-            // A API Key foi inserida diretamente no código para resolver o erro 403.
-            const apiKey = "AIzaSyDZj62ymhVHBBL1zcNvsK_X9LbxHw5p6mw"; 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            // Efeito para carregar conteúdo quando a matéria selecionada muda
+            React.useEffect(() => {
+                if (selectedSubject) {
+                    const subject = subjectsMetaData.find(s => s.id === selectedSubject);
+                    if (subject) {
+                        generateContentForSubject(subject.id, subject.name);
+                    }
+                }
+            }, [selectedSubject]); // Dependência: selectedSubject
 
-            console.log("Enviando solicitação para a API Gemini...");
-            console.log("Payload:", JSON.stringify(payload, null, 2));
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+            // Lida com a mudança das respostas do usuário
+            const handleAnswerChange = (questionIndex, value) => {
+                setUserAnswers(prevAnswers => ({
+                    ...prevAnswers,
+                    [questionIndex]: value
+                }));
+                // Limpa o feedback anterior para a pergunta modificada
+                setGeminiFeedback(prevFeedback => {
+                    const newFeedback = { ...prevFeedback };
+                    delete newFeedback[questionIndex];
+                    return newFeedback;
                 });
+            };
 
-                console.log("Resposta da API (status):", response.status, response.statusText);
+            // Função assíncrona para obter feedback da IA para uma resposta
+            const getGeminiFeedback = async (questionObj, userAnswer, questionIndex) => {
+                setLoadingFeedback(prev => ({ ...prev, [questionIndex]: true }));
+                // Para perguntas abertas, a resposta esperada é diretamente a propriedade 'answer'
+                const expectedAnswer = questionObj.answer;
 
-                if (!response.ok) {
-                    const errorData = await response.text();
-                    console.error("Erro na resposta da API:", response.status, errorData);
-                    addMessage('model', `Desculpe, houve um problema de comunicação com o serviço. Status: ${response.status}.`);
-                    return; // Sai da função se a resposta não for OK
-                }
+                try {
+                    const prompt = `
+                        Analise a seguinte pergunta, a resposta esperada/correta e a resposta do usuário. Forneça um feedback detalhado estritamente no formato JSON.
+                        Pergunta: "${questionObj.question}"
+                        Resposta Esperada/Correta: "${expectedAnswer}"
+                        Resposta do Usuário: "${userAnswer || 'Nenhuma resposta fornecida'}"
 
-                const result = await response.json();
-                console.log("Resposta completa da API Gemini:", JSON.stringify(result, null, 2));
+                        A resposta deve ser estritamente em formato JSON, seguindo esta estrutura:
+                        {
+                          "isCorrect": boolean,
+                          "feedback": "Texto do feedback geral.",
+                          "errorsExplained": "Explicação dos erros (se houver).",
+                          "tipsForImprovement": "Dicas para melhorar (se houver).",
+                          "performanceLevel": "Básico" | "Intermediário" | "Avançado"
+                        }
+                    `;
 
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    const text = result.candidates[0].content.parts[0].text;
-                    addMessage('model', text); // Adiciona a resposta do Sigilo ao chat
-                    chatHistory.push({ role: "model", parts: [{ text: text }] }); // Adiciona a resposta ao histórico
-                } else {
-                    addMessage('model', "Desculpe, não consegui gerar uma resposta significativa para sua pergunta. Poderia tentar de outra forma?");
-                    console.error("Estrutura de resposta inesperada ou conteúdo ausente da API Gemini:", result);
-                }
-            } catch (error) {
-                console.error("Erro fatal ao chamar a API Gemini:", error);
-                addMessage('model', "Houve um erro grave ao processar sua solicitação. Por favor, tente novamente mais tarde.");
-            } finally {
-                loadingIndicator.style.display = 'none'; // Esconde o indicador de carregamento
-                sendButton.disabled = false; // Habilita o botão de envio
-                questionInput.disabled = false; // Habilita a caixa de texto
-                questionInput.focus(); // Foca na caixa de texto para nova pergunta
-            }
-        }
+                    const payload = {
+                        contents: [{ role: "user", parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: {
+                                    isCorrect: { "type": "BOOLEAN" },
+                                    feedback: { "type": "STRING" },
+                                    errorsExplained: { "type": "STRING" },
+                                    tipsForImprovement: { "type": "STRING" },
+                                    performanceLevel: { "type": "STRING", "enum": ["Básico", "Intermediário", "Avançado"] }
+                                },
+                                required: ["isCorrect", "feedback", "errorsExplained", "tipsForImprovement", "performanceLevel"]
+                            }
+                        }
+                    };
 
-        // Adiciona event listener para o botão de envio
-        sendButton.addEventListener('click', sendQuestionToGemini);
-
-        // Permite enviar a pergunta pressionando Enter na caixa de texto
-        questionInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter' && !event.shiftKey) { // Shift+Enter para nova linha
-                event.preventDefault(); // Impede que o Enter adicione uma nova linha
-                sendQuestionToGemini();
-            }
-        });
-
-        // Adiciona event listeners para as sugestões
-        suggestionsContainer.addEventListener('click', (event) => {
-            if (event.target.classList.contains('suggestion-tag')) {
-                questionInput.value = event.target.textContent;
-                sendQuestionToGemini(); // Envia a pergunta automaticamente
-            }
-        });
-
-        // Função para abrir o modal de saída
-        function openModal() {
-            exitIntentModal.style.display = 'block';
-        }
-
-        // Função para fechar o modal de saída
-        function closeModal() {
-            exitIntentModal.style.display = 'none';
-        }
-
-        // Fecha o modal se o usuário clicar fora do conteúdo do modal
-        window.addEventListener('click', (event) => {
-            if (event.target === exitIntentModal) {
-                closeModal();
-            }
-        });
-
-        // Lógica para o modal de intenção de saída
-        let hasShownExitModal = false; // Garante que o modal apareça apenas uma vez por sessão
-
-        document.addEventListener('mouseleave', (event) => {
-            // Verifica se o mouse está saindo pela parte superior da janela
-            if (event.clientY < 50 && !hasShownExitModal) { // 50px do topo como limite
-                openModal();
-                hasShownExitModal = true;
-            }
-        });
-
-        window.addEventListener('beforeunload', () => {
-            hasShownExitModal = false; // Reseta a flag para que o modal apareça novamente em uma nova sessão
-        });
-
-        // --- Funções e listeners para os botões de rolagem das sugestões ---
-        function scrollSuggestions(direction) {
-            const scrollAmount = 250; // Quantidade de pixels para rolar
-            if (direction === 'left') {
-                suggestionsScrollContainer.scrollBy({
-                    left: -scrollAmount,
-                    behavior: 'smooth'
-                });
-            } else {
-                suggestionsScrollContainer.scrollBy({
-                    left: scrollAmount,
-                    behavior: 'smooth'
-                });
-            }
-        }
-
-        function toggleScrollButtonsVisibility() {
-            if (suggestionsScrollContainer.scrollWidth > suggestionsScrollContainer.clientWidth) {
-                // Há mais conteúdo do que o visível, então rolagem é possível.
-                // Exibe o botão esquerdo se não estiver no início
-                if (suggestionsScrollContainer.scrollLeft > 0) {
-                    scrollLeftBtn.style.display = 'block';
-                } else {
-                    scrollLeftBtn.style.display = 'none';
-                }
-
-                // Exibe o botão direito se não estiver no final
-                if (suggestionsScrollContainer.scrollLeft + suggestionsScrollContainer.clientWidth < suggestionsScrollContainer.scrollWidth - 1) { // -1 para margem de erro
-                    scrollRightBtn.style.display = 'block';
-                } else {
-                    scrollRightBtn.style.display = 'none';
-                }
-            } else {
-                // Conteúdo cabe na tela, não precisa de botões de rolagem
-                scrollLeftBtn.style.display = 'none';
-                scrollRightBtn.style.display = 'none';
-            }
-        }
-
-        // Adiciona event listeners para os botões
-        scrollLeftBtn.addEventListener('click', () => scrollSuggestions('left'));
-        scrollRightBtn.addEventListener('click', () => scrollSuggestions('right'));
-
-        // Monitora a rolagem e o redimensionamento da janela para atualizar a visibilidade dos botões
-        suggestionsScrollContainer.addEventListener('scroll', toggleScrollButtonsVisibility);
-        window.addEventListener('resize', toggleScrollButtonsVisibility);
-
-        // Adiciona uma mensagem inicial do Sigilo ao carregar a página
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("Página carregada.");
-            // Registra o Service Worker para PWA
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker registrado com sucesso:', registration);
-                    })
-                    .catch(error => {
-                        console.error('Falha no registro do Service Worker:', error);
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
                     });
-            }
-            // Chama a função de visibilidade dos botões após o carregamento inicial do conteúdo
-            toggleScrollButtonsVisibility();
 
-            // Inicializa o VLibras aqui
-            if (window.VLibras && typeof window.VLibras.Widget === 'function') {
-                new window.VLibras.Widget('https://vlibras.gov.br/app');
-                console.log("VLibras inicializado com sucesso.");
-            } else {
-                console.error("window.VLibras.Widget não está disponível. Verifique o carregamento do script VLibras.");
-            }
-        });
+                    const result = await response.json();
+                    let parsedFeedback;
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const jsonString = result.candidates[0].content.parts[0].text;
+                        try {
+                            parsedFeedback = JSON.parse(jsonString);
+                        } catch (parseError) {
+                            const match = jsonString.match(/```json\n([\s\S]*?)\n```/);
+                            if (match && match[1]) {
+                                parsedFeedback = JSON.parse(match[1]);
+                            } else {
+                                throw new Error("Erro ao extrair JSON do feedback da IA.");
+                            }
+                        }
+                        setGeminiFeedback(prevFeedback => ({
+                            ...prevFeedback,
+                            [questionIndex]: parsedFeedback
+                        }));
+                    } else {
+                        throw new Error("Nenhum feedback gerado pela IA.");
+                    }
+                } catch (error) {
+                    console.error("Erro ao obter feedback:", error);
+                    setGeminiFeedback(prevFeedback => ({
+                        ...prevFeedback,
+                        [questionIndex]: {
+                            isCorrect: false,
+                            feedback: `Erro ao obter feedback: ${error.message}`,
+                            errorsExplained: "",
+                            tipsForImprovement: "",
+                            performanceLevel: "Básico"
+                        }
+                    }));
+                } finally {
+                    setLoadingFeedback(prev => ({ ...prev, [questionIndex]: false }));
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-100 font-sans text-gray-800 flex flex-col">
+                    {/* Cabeçalho Fixo */}
+                    <header className="bg-red-700 text-white p-4 shadow-lg fixed w-full z-10 rounded-b-xl">
+                        <div className="container mx-auto flex justify-between items-center">
+                            <h1 className="text-3xl font-extrabold tracking-tight">FATEC - ADS <span className="text-red-200">Plataforma de Estudos</span></h1>
+                            <nav>
+                                <ul className="flex space-x-6">
+                                    {subjectsMetaData.map((subject) => (
+                                        <li key={subject.id}>
+                                            <button
+                                                onClick={() => setSelectedSubject(subject.id)}
+                                                className={`py-2 px-4 rounded-lg font-semibold transition-all duration-300 ease-in-out
+                                                    ${selectedSubject === subject.id
+                                                        ? 'bg-white text-red-700 shadow-md transform scale-105'
+                                                        : 'text-white hover:bg-red-800 hover:shadow-md hover:transform hover:scale-105'
+                                                    }`}
+                                            >
+                                                {subject.name}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </nav>
+                        </div>
+                    </header>
+
+                    {/* Conteúdo Principal */}
+                    <main className="flex-grow container mx-auto p-6 pt-24 pb-16"> {/* Ajuste o padding-top para o cabeçalho fixo */}
+                        {!selectedSubject && (
+                            <div className="text-center mt-20 p-8 bg-white rounded-xl shadow-lg border border-gray-200">
+                                <h2 className="text-4xl font-bold text-gray-800 mb-4">Bem-vindo à Plataforma de Estudos!</h2>
+                                <p className="text-xl text-gray-600">Selecione uma matéria acima para começar a explorar.</p>
+                                <p className="mt-6 text-lg text-gray-500">Prepare-se para o curso de Análise e Desenvolvimento de Sistemas da FATEC!</p>
+                            </div>
+                        )}
+
+                        {loadingContent && (
+                            <div className="flex justify-center items-center h-64">
+                                <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-red-500"></div>
+                                <p className="ml-4 text-xl text-gray-600">Carregando conteúdo, por favor aguarde...</p>
+                            </div>
+                        )}
+
+                        {currentSubjectContent && (
+                            <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+                                <h2 className="text-4xl font-bold text-red-700 mb-6 text-center">
+                                    {subjectsMetaData.find(s => s.id === selectedSubject)?.name}
+                                </h2>
+
+                                {/* Seção do Resumo */}
+                                <section className="mb-10">
+                                    <h3 className="text-2xl font-semibold text-gray-700 mb-4 border-b-2 pb-2 border-gray-300">Resumo</h3>
+                                    <div className="prose max-w-none leading-relaxed text-gray-700"
+                                         dangerouslySetInnerHTML={{ __html: currentSubjectContent.summary.replace(/\n/g, '<br/>') }} />
+                                </section>
+
+                                {/* Seção de Perguntas */}
+                                <section>
+                                    <h3 className="text-2xl font-semibold text-gray-700 mb-6 border-b-2 pb-2 border-gray-300">Perguntas</h3>
+                                    {currentSubjectContent.questions.map((q, qIndex) => (
+                                        <div key={qIndex} className="mb-8 p-6 bg-gray-50 rounded-lg shadow-sm border border-gray-100">
+                                            <p className="font-medium text-lg mb-4 text-gray-800">
+                                                <span className="text-red-600 mr-2">Questão {qIndex + 1}:</span> {q.question}
+                                            </p>
+
+                                            {/* Agora apenas input type="text" */}
+                                            <input
+                                                type="text"
+                                                value={userAnswers[qIndex] || ''}
+                                                onChange={(e) => handleAnswerChange(qIndex, e.target.value)}
+                                                placeholder="Digite sua resposta aqui..."
+                                                disabled={loadingFeedback[qIndex]}
+                                                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-200 disabled:bg-gray-100"
+                                            />
+
+                                            <button
+                                                onClick={() => getGeminiFeedback(q, userAnswers[qIndex], qIndex)}
+                                                disabled={loadingFeedback[qIndex] || !userAnswers[qIndex]}
+                                                className="mt-4 px-6 py-2 bg-red-700 text-white font-semibold rounded-lg shadow-md hover:bg-red-800 transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {loadingFeedback[qIndex] ? (
+                                                    <div className="flex items-center justify-center">
+                                                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                                                        Verificando...
+                                                    </div>
+                                                ) : (
+                                                    "Verificar Resposta"
+                                                )}
+                                            </button>
+
+                                            {/* Exibição do Feedback da IA */}
+                                            {geminiFeedback[qIndex] && (
+                                                <div className={`mt-6 p-5 rounded-lg shadow-inner transition-all duration-300 ease-in-out
+                                                    ${geminiFeedback[qIndex].isCorrect ? 'bg-green-50 border border-green-400' : 'bg-red-50 border border-red-400'}
+                                                `}>
+                                                    <h4 className="font-bold text-lg mb-3 flex items-center">
+                                                        {geminiFeedback[qIndex].isCorrect ? (
+                                                            <span className="text-green-600 mr-2">✓ Status: Correto!</span>
+                                                        ) : (
+                                                            <span className="text-red-600 mr-2">✗ Status: Incorreto!</span>
+                                                        )}
+                                                    </h4>
+                                                    <p className="mb-2 text-gray-700">
+                                                        <span className="font-semibold">Nível de Desempenho:</span> {geminiFeedback[qIndex].performanceLevel}
+                                                    </p>
+                                                    <p className="mb-2 text-gray-700">
+                                                        <span className="font-semibold">Seu Feedback:</span> {geminiFeedback[qIndex].feedback}
+                                                    </p>
+                                                    {geminiFeedback[qIndex].errorsExplained && (
+                                                        <p className="mb-2 text-gray-700">
+                                                            <span className="font-semibold">Erros Explicados:</span> {geminiFeedback[qIndex].errorsExplained}
+                                                        </p>
+                                                    )}
+                                                    {geminiFeedback[qIndex].tipsForImprovement && (
+                                                        <p className="text-gray-700">
+                                                            <span className="font-semibold">Dicas para Melhorar:</span> {geminiFeedback[qIndex].tipsForImprovement}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </section>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Rodapé Simples */}
+                    <footer className="bg-gray-800 text-white p-4 text-center text-sm mt-8 rounded-t-xl shadow-inner">
+                        <div className="container mx-auto">
+                            &copy; {new Date().getFullYear()} Plataforma de Estudos FATEC - ADS. Todos os direitos reservados.
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        // Renderiza o componente App na div com id "root"
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
 </html>
